@@ -939,6 +939,7 @@ png_set_read_offset(png_structp png_ptr,
 void PNGAPI
 png_configure_decoder(png_structp png_ptr, int *row, int pass)
 {
+   long row_byte_length;
    png_indexp index = png_ptr->index;
    int n = *row / index->step[pass];
    png_line_indexp line_index = index->pass_line_index[pass][n];
@@ -952,7 +953,7 @@ png_configure_decoder(png_structp png_ptr, int *row, int pass)
       png_set_interlaced_pass(png_ptr, pass);
 #endif
 
-   long row_byte_length =
+   row_byte_length =
       PNG_ROWBYTES(png_ptr->pixel_depth, png_ptr->iwidth) + 1;
 
    inflateEnd(&png_ptr->zstream);
@@ -978,6 +979,7 @@ png_build_index(png_structp png_ptr)
    png_uint_32 i, j;
    png_bytep rp;
    int p, pass_number = 1;
+   png_indexp index;
 
 #ifdef PNG_READ_INTERLACING_SUPPORTED
    pass_number = png_set_interlace_handling(png_ptr);
@@ -997,7 +999,7 @@ png_build_index(png_structp png_ptr)
 
    rp = png_malloc(png_ptr, png_ptr->rowbytes);
 
-   png_indexp index = png_malloc(png_ptr, sizeof(png_index));
+   index = png_malloc(png_ptr, sizeof(png_index));
    png_ptr->index = index;
 
    index->stream_idat_position = png_ptr->total_data_read - IDAT_HEADER_SIZE;
@@ -1009,6 +1011,7 @@ png_build_index(png_structp png_ptr)
 
    for (p = 0; p < pass_number; p++)
    {
+      int row_byte_length;
       // We adjust the index step in each pass to make sure each pass
       // has roughly the same size of index.
       // This way, we won't consume to much memory in recording index.
@@ -1021,7 +1024,7 @@ png_build_index(png_structp png_ptr)
       // Get the row_byte_length seen by the filter. This value may be
       // different from the row_byte_length of a bitmap in the case of
       // color palette mode.
-      int row_byte_length =
+      row_byte_length =
          PNG_ROWBYTES(png_ptr->pixel_depth, png_ptr->iwidth) + 1;
 
       // Now, we record index for each indexing row.
